@@ -2,8 +2,11 @@
 
 ## Сборка (cmake)
 mkdir build
+
 cd build
+
 cmake ..
+
 cmake --build . --config Debug
 
 ## Запуск main
@@ -11,5 +14,6 @@ cmake --build . --config Debug
 
 ## Запуск тестов
 ctest -C Debug --output-on-failure
+
 .\Debug\run_gtests.exe
 
