@@ -137,39 +137,15 @@ public:
         return true;
     }
 
-    bool IsEmpty() const { return Base::IsEmpty(); }
-    int GetSize() const { return Base::GetSize(); }
-    void Clear() { Base::Clear(); }
-    
-    Deque<T>* Concat(const Deque<T>& other) const {
-        return Base::Concat(other);
-    }
-    
-    Deque<T>* GetSubcontainer(int start, int end) const {
-        return Base::GetSubcontainer(start, end);
-    }
-    
-    template <typename ResultType>
-    Deque<ResultType>* Map(std::function<ResultType(T)> func) const {
-        return Base::template Map<ResultType>(func);
-    }
-    
-    Deque<T>* Where(std::function<bool(const T&)> predicate) const {
-        return Base::Where(predicate);
-    }
-    
-    template <typename Accumulator>
-    Accumulator Reduce(const Accumulator& initial, std::function<Accumulator(Accumulator, T)> func) const {
-        return Base::Reduce(initial, func);
-    }
-    
-    bool ContainsSubsequence(const Sequence<T>& subsequence) const {
-        return Base::ContainsSubsequence(subsequence);
-    }
-    
-    bool ContainsSubsequence(const Deque<T>& subsequence) const {
-        return Base::ContainsSubsequence(subsequence);
-    }
+    using Base::IsEmpty;
+    using Base::GetSize;
+    using Base::Clear;
+    using Base::Concat;
+    using Base::GetSubcontainer;
+    using Base::Map;
+    using Base::Where;
+    using Base::Reduce;
+    using Base::ContainsSubsequence;
 };
 
 #endif //_DEQUE_HPP_

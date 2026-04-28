@@ -67,39 +67,15 @@ public:
         return Pair<Queue<T>, Queue<T>>(trueQueue, falseQueue);
     }
 
-    bool IsEmpty() const { return Base::IsEmpty(); }
-    int GetSize() const { return Base::GetSize(); }
-    void Clear() { Base::Clear(); }
-    
-    Queue<T>* Concat(const Queue<T>& other) const {
-        return Base::Concat(other);
-    }
-    
-    Queue<T>* GetSubcontainer(int start, int end) const {
-        return Base::GetSubcontainer(start, end);
-    }
-    
-    template <typename ResultType>
-    Queue<ResultType>* Map(std::function<ResultType(T)> func) const {
-        return Base::template Map<ResultType>(func);
-    }
-    
-    Queue<T>* Where(std::function<bool(const T&)> predicate) const {
-        return Base::Where(predicate);
-    }
-    
-    template <typename Accumulator>
-    Accumulator Reduce(const Accumulator& initial, std::function<Accumulator(Accumulator, T)> func) const {
-        return Base::Reduce(initial, func);
-    }
-    
-    bool ContainsSubsequence(const Sequence<T>& subsequence) const {
-        return Base::ContainsSubsequence(subsequence);
-    }
-    
-    bool ContainsSubsequence(const Queue<T>& subsequence) const {
-        return Base::ContainsSubsequence(subsequence);
-    }
+    using Base::IsEmpty;
+    using Base::GetSize;
+    using Base::Clear;
+    using Base::Concat;
+    using Base::GetSubcontainer;
+    using Base::Map;
+    using Base::Where;
+    using Base::Reduce;
+    using Base::ContainsSubsequence;
 };
 
 #endif //_QUEUE_HPP_
