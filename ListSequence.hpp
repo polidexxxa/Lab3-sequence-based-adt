@@ -3,14 +3,35 @@
 
 #include "Sequence.hpp"
 #include "LinkedList.hpp"
-#include "Option.hpp"
 #include "Exceptions.hpp"
 #include <functional>
 
+//Mutable
 template<typename T>
-class ListSequence : public Sequence<T> {   //Mutable
+class ListSequence : public Sequence<T> {
 private:
     LinkedList<T>* list;
+
+protected:
+    Sequence<T>* CreateEmptySameType() const override {
+        return new ListSequence<T>();
+    }
+    
+    void AppendInternal(const T& item) override { 
+        list->Append(item); 
+    }
+
+    void PrependInternal(const T& item) override { 
+        list->Prepend(item); 
+    }
+
+    void InsertAtInternal(const T& item, int index) override { 
+        list->InsertAt(item, index); 
+    }
+
+    void SetInternal(int index, const T& item) override {
+        list->GetRef(index) = item;
+    }
 
 public:
     ListSequence(T* items, int count) {
@@ -29,14 +50,6 @@ public:
         this->list = new LinkedList<T>(*(other.list));
     }
 
-    ListSequence(ListSequence<T>&& other) noexcept 
-        : list(other.list) {
-        other.list = nullptr;
-    }
-
-    explicit ListSequence(LinkedList<T>&& linkedList) noexcept 
-        : list(new LinkedList<T>(std::move(linkedList))) {}
-
     ~ListSequence() override {
         delete list;
     }
@@ -44,7 +57,7 @@ public:
     Sequence<T>* Instance() override { 
         return this;
     }
-
+    
     ListSequence<T>& operator=(const ListSequence<T>& other) {
         if (this != &other) {
             delete list;
@@ -69,49 +82,6 @@ public:
         return list->GetLength();
     }
 
-    void AppendInternal(const T& item) override { 
-        list->Append(item); 
-    }
-
-    void PrependInternal(const T& item) override { 
-        list->Prepend(item); 
-    }
-
-    void InsertAtInternal(const T& item, int index) override { 
-        list->InsertAt(item, index); 
-    }
-
-    Sequence<T>* GetSubsequence(int startIndex, int endIndex) const override {
-        LinkedList<T>* subList = list->GetSubList(startIndex, endIndex);
-
-        ListSequence<T>* subsequence = new ListSequence<T>(*subList);
-        
-        delete subList;
-        return subsequence;
-    }
-
-    Sequence<T>* Concat(const Sequence<T>* other) const override {
-        if (other == nullptr) {
-            throw InvalidArgumentException("Cannot concatenate with null sequence");
-        }
-
-        LinkedList<T> resultList;
-        
-        IEnumerator<T>* enum1 = this->GetEnumerator();
-        while (enum1->MoveNext()) {
-            resultList.Append(enum1->GetCurrent());
-        }
-        delete enum1;
-        
-        IEnumerator<T>* enum2 = other->GetEnumerator();
-        while (enum2->MoveNext()) {
-            resultList.Append(enum2->GetCurrent());
-        }
-        delete enum2;
-        
-        return new ListSequence<T>(resultList);
-    }
-
     const LinkedList<T>& GetInternalList() const {
         return *list;
     }
@@ -131,109 +101,8 @@ public:
         return result;
     }
 
-    Sequence<T>* Where(std::function<bool(const T&)> predicate) const {
-        ListSequence<T>* result = new ListSequence<T>(); 
-
-        IEnumerator<T>* enumerator = this->GetEnumerator();
-        while (enumerator->MoveNext()) {
-            T val = enumerator->GetCurrent();
-            if (predicate(val)) {
-                result->Append(val);
-            }
-        }
-        delete enumerator;
-    
-        return result;
-    }
-
-    template<typename Accumulator>
-    Accumulator Reduce(const Accumulator& initial, std::function<Accumulator(Accumulator, const T&)> func) const {
-        Accumulator result = initial;
-
-        IEnumerator<T>* enumerator = this->GetEnumerator();
-        while (enumerator->MoveNext()) {
-            result = func(result, enumerator->GetCurrent());
-        }
-        delete enumerator;
-
-        return result;
-    }
-
-    Option<T> TryFind(std::function<bool(const T&)> predicate) const override {
-        for (int i = 0; i < this->GetLength(); i++) {
-            T val = this->Get(i);
-            if (predicate(val)) {
-                return Option<T>(val);
-            }
-        }
-        return Option<T>();
-    }
-    
-    Option<T> TryGetFirst() const override {
-        if (this->GetLength() == 0) {
-            return Option<T>();
-        }
-        return Option<T>(this->GetFirst());
-    }
-    
-    Option<T> TryGetLast() const override {
-        if (this->GetLength() == 0) {
-            return Option<T>();
-        }
-        return Option<T>(this->GetLast());
-    }
-
     Sequence<T>* Clone() const override {
         return new ListSequence<T>(*this);
-    }
-
-    Sequence<T>* Slice(int start, int count, Sequence<T>* replacement = nullptr) const override {
-        int length = this->GetLength();
-        
-        if (start < 0) {
-            start = length + start;
-        }
-        
-        if (start < 0 || start >= length) {
-            throw IndexOutOfRangeException("Start index out of range");
-        }
-        
-        if (count < 0) {
-            throw InvalidArgumentException("Count cannot be negative");
-        }
-        
-        if (start + count > length) {
-            count = length - start;
-        }
-        
-        ListSequence<T>* result = new ListSequence<T>();
-
-        IEnumerator<T>* enumerator = this->GetEnumerator();
-        int index = 0;
-        
-        while (enumerator->MoveNext() && index < start) {
-            result->Append(enumerator->GetCurrent());
-            index++;
-        }
-
-        for (int i = 1; i < count && enumerator->MoveNext(); i++) {
-            index++;
-        }
-        
-        if (replacement != nullptr) {
-            IEnumerator<T>* replEnum = replacement->GetEnumerator();
-            while (replEnum->MoveNext()) {
-                result->Append(replEnum->GetCurrent());
-            }
-            delete replEnum;
-        }
-        
-        while (enumerator->MoveNext()) {
-            result->Append(enumerator->GetCurrent());
-        }
-        
-        delete enumerator;
-        return result;
     }
 
     T& operator[](int index) override {
@@ -256,6 +125,11 @@ public:
 
 template<typename T>
 class ImmutableListSequence : public ListSequence<T> {
+protected:
+    Sequence<T>* CreateEmptySameType() const override {
+        return new ImmutableListSequence<T>();
+    }
+    
 public:
     using ListSequence<T>::ListSequence;
     
